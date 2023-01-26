@@ -2,6 +2,11 @@
 
 namespace iSalud\App\Console;
 
+use Exception;
+use iSalud\ClientsManager\Application\Command\RenewClients\RenewClientsCommand;
+use iSalud\ClientsManager\Infrastructure\Service\GenerateClientsCSV\GenerateClientsCSV;
+use iSalud\ClientsManager\Infrastructure\Service\GetClients\GetClientsFromApi;
+use iSalud\ClientsManager\Infrastructure\Service\GetClients\GetClientsFromFile;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -32,8 +37,14 @@ final class RenewClientsConsoleCommand extends Command
     {
         try {
             $this->getParams($input);
-            $this->renewClients();
-            $output->writeln('It works!');
+            $result = $this->renewClients();
+
+            if (empty($result)) {
+                throw new \Exception('ERROR :: Sorry, the file could not been generated');
+            }
+
+            $output->writeln($result);
+
         } catch (\Exception $ex) {
             $output->writeln($ex->getMessage());
         }
@@ -45,8 +56,19 @@ final class RenewClientsConsoleCommand extends Command
         $this->destinationFile = $input->getArgument('destination-file') ?? '';
     }
 
-    private function renewClients(): void
+    /**
+     * @throws Exception
+     */
+    private function renewClients(): string
     {
-        // TODO
+        $renewClientsCommand = new RenewClientsCommand(
+            GetClientsFromApi::create(),
+            GetClientsFromFile::create(),
+            GenerateClientsCSV::create(),
+            $this->externalFile,
+            $this->destinationFile
+        );
+
+        return $renewClientsCommand->execute();
     }
 }
