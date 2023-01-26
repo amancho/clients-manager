@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+    php:
+        build:
+            context: ./docker/images/php-cli
+            dockerfile: Dockerfile
+        container_name: clients-manager-php-cli
+        environment:
+            TZ: "Europe/Madrid"
+            PHP_EXTENSION_XDEBUG: 1
+            PHP_INI_XDEBUG__REMOTE_PORT: 9000
+            PHP_IDE_CONFIG: "serverName=clients-manager-php-cli"
+            XDEBUG_CONFIG: "log_errors=1 remote_autostart=1 remote_enable=1"
+        tty: true
+        volumes:
+            - './:/var/www'

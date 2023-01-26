@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+HOST_USER_ID=$(id -u "$(whoami)")
+HOST_GROUP_ID=$(id -g "$(whoami)")
+
+docker run                                      \
+    --rm --interactive --tty                    \
+    --user "${HOST_USER_ID}:${HOST_GROUP_ID}"   \
+    --network clients-manager_default           \
+    --volume "$PWD":/var/www                    \
+    --workdir /var/www                          \
+    clients-manager.php-cli                     \
+    php vendor/bin/phpunit "$@"
