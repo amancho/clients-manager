@@ -3,6 +3,7 @@
 namespace iSalud\ClientsManager\Application\Command\RenewClients;
 
 use Exception;
+use iSalud\ClientsManager\Domain\Client\Client;
 use iSalud\ClientsManager\Domain\Client\ClientCollection;
 
 final class RenewClientsCommand
@@ -22,22 +23,34 @@ final class RenewClientsCommand
      */
     public function execute(): string
     {
-        $clients = $this->getClientsFromApi->execute();
+        $clientCollection = $this->getClientsFromApi->execute();
 
-        if (!empty($clients)) {
+        if ($clientCollection->isNotEmpty() && !empty($this->sourceFilePath)) {
             $clientsFromFile = $this->getClientsFromFile->execute($this->sourceFilePath);
-            $clients = \array_merge($clients, $clientsFromFile);
+
+            /* @var Client $client */
+            foreach ($clientsFromFile as $client) {
+                $clientCollection->add($client);
+            }
         }
 
-        if (empty($clients)) {
+        if ($clientCollection->isEmpty()) {
             throw new \Exception('ERROR :: Sorry, clients could not been loaded');
         }
 
-        return '';
+        return $this->getSuccessMessage(
+            $clientCollection,
+            $this->generateCSV($clientCollection)
+        );
+    }
+
+    private function getSuccessMessage(ClientCollection $clientCollection, string $generatedCSVFile): string
+    {
+        return \sprintf('File %s was successfully generated with %s clients', $generatedCSVFile, $clientCollection->count());
     }
 
     private function generateCSV(ClientCollection $clientCollection): string
     {
-        return (string)$clientCollection->count();
+        return $this->exportClientsToFile->execute($clientCollection, $this->destinationFileName);
     }
 }
