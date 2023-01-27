@@ -2,7 +2,9 @@
 
 namespace iSalud\ClientsManager\Application\Command\RenewClients;
 
+use iSalud\ClientsManager\Domain\Client\ClientCollection;
+
 interface ImportClientsFromFile
 {
-    public function execute(string $filePath): array;
+    public function execute(string $filePath): ClientCollection;
 }
